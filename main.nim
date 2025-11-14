@@ -1,0 +1,42 @@
+import service, types, terminal_render, loop
+
+
+# echo repr findClosestFood(animal)
+
+var field = Field(
+    size: 10
+)
+
+initField(field)
+
+
+let p1 = Player(
+    name: "me", points: 0, color: ""
+)
+
+let g1 = Genome(
+    speed: 0.1, energy: 0.1, vision: 10
+)
+
+let s1 = Species(
+    genome: g1, name: "s1"
+)
+
+var a1 = Animal(
+    species: s1, owner: p1, food_needed: 1, food_eaten: 0, pos: field.cells[0][0]
+)
+
+# ? Maybe make a helper to automatically make cell occupied when animal steps on it so i cant mes up
+field.cells[0][0].is_occupied = true
+
+var animals: seq[Animal] = @[a1]
+
+generateFood(field)
+
+
+drawField(field, animals)
+
+for i in 0..10:
+    animalMakeDecision(animals[0], field)
+
+    drawField(field, animals)

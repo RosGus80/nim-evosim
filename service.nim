@@ -14,27 +14,43 @@ proc clampCoord(x, max: uint): uint =
 # proc djikstraNextStep(animal: Animal, target: (uint, uint), field: Field): (uint, uint) = 
 
 
+proc animalRest*(animal: var Animal) =
+    animal.species.genome.energy += 1
 
-proc stepTowards(animal: var Animal, field: var Field, target: (uint,uint)) =
+
+# & proc for draining energy from animals after they walked 
+proc animalFatigue*(animal: var Animal) =
+    # ! 1 for now. Later calculate based on speed, size, etc.
+    animal.species.genome.energy -= 1
+
+
+proc stepTowards*(animal: var Animal, field: var Field, target: (uint,uint)) =
     var (ax, ay) = animal.pos.pos
     let (tx, ty) = target
 
-    if ax < tx: inc(ax)
-    elif ax > tx: dec(ax)
-
-    if ay < ty: inc(ay)
-    elif ay > ty: dec(ay)
-
     let max = field.size - 1
 
-    field.cells[ax][ay].is_occupied = false
+    var newX = ax
+    var newY = ay
 
-    ax = clampCoord(ax, max)
-    ay = clampCoord(ay, max)
+    if ax < tx: inc(newX)
+    elif ax > tx: dec(newX)
 
-    animal.pos.pos = (ax, ay)
+    if ay < ty: inc(newY)
+    elif ay > ty: dec(newY)
 
-    field.cells[ax][ay].is_occupied = true
+    newX = clampCoord(newX, max)
+    newY = clampCoord(newY, max)
+
+    if not field.cells[newX][newY].is_occupied:
+        field.cells[ax][ay].is_occupied = false
+
+        animal.pos.pos = (newX, newY)
+        field.cells[newX][newY].is_occupied = true
+
+        animal.animalFatigue()
+    else:
+        animal.animalRest()
 
 
 proc findClosestFood*(animal: Animal, field: Field): (bool, (uint,uint)) =
@@ -55,20 +71,15 @@ proc findClosestFood*(animal: Animal, field: Field): (bool, (uint,uint)) =
     return (found, closestPos)
 
 
-# & Probably a proc for all animal decision making. Currently just goes one step a call towards the closest food or just wandering
-proc animalMakeDecision*(animal: var Animal, field: var Field) = 
-    randomize()
 
-    let (foundFood, closestFood) = findClosestFood(animal, field)
+proc eatFood*(field: var Field) = 
+    for i in 0..field.size-1:
+        for j in 0..field.size-1:
+            if field.cells[i][j].is_occupied:
+                # echo "Food eaten! " &  repr(field.cells[i][j].has_food) & " " &  $i & " " & $j
 
-    # ^ Step or wander. If new decision making is added, first decide if its worth moving at allf
-    if foundFood:
-        stepTowards(animal, field, closestFood)
-    else:
-        let directionX: uint = uint(rand(1)) + 1
-        let directionY: uint = uint(rand(1)) + 1
-        
-        let target: (uint, uint) = (directionX, directionY)
+                # ! If occupied will not neccessairly mean that there is an animal (maybe its terrain or something), change this and check if this is an animal here!
+                field.cells[i][j].has_food = false
 
-        stepTowards(animal, field, target)
+                # echo "Food eaten! " &  repr(field.cells[i][j].has_food) & " " &  $i & " " & $j
 

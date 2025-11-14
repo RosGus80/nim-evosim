@@ -10,32 +10,28 @@ const
 proc drawField*(field: Field, animals: seq[Animal]) =
     var occupied = initTable[(uint,uint), Animal]()
 
-    # quick lookup for animals
     for a in animals:
         occupied[a.pos.pos] = a
 
-    let cellWidth: uint = 2          # "  "
+    let cellWidth: uint = 2
     let widthChars = field.size * cellWidth
 
-    # top border
     stdout.write("+" & repeat("-", widthChars) & "+\n")
 
-    # draw each row
     for i in 0..<int(field.size):
-        stdout.write("|")     # left border
+        stdout.write("|")
 
         for j in 0..<int(field.size):
             let cell = field.cells[i][j]
 
             if occupied.hasKey(cell.pos):
-                stdout.write(redBg & "  " & reset)
+                stdout.write(redBg & " ".repeat(cellWidth) & reset)
             elif cell.has_food:
-                stdout.write(greenBg & "  " & reset)
+                stdout.write(greenBg & " ".repeat(cellWidth) & reset)
             else:
-                stdout.write("  ")
+                stdout.write(" ".repeat(cellWidth))
 
-        stdout.write("|\n")   # right border
+        stdout.write("|\n")
 
-    # bottom border
     stdout.write("+" & repeat("-", widthChars) & "+\n")
     

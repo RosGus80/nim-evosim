@@ -35,9 +35,9 @@ type
 
 # & Currently just populate cells
 proc initField*(field: var Field) = 
-    for i in 1..field.size:
+    for i in 0..field.size-1:
         var new_row: seq[Cell] = @[]
-        for ii in 1..field.size:
+        for ii in 0..field.size-1:
             new_row.add(
                 Cell(
                     pos: (i, ii), 

@@ -12,7 +12,7 @@ proc generateFood*(field: var Field) =
     randomize()
 
     # ! Later computate it based on animal amount and weather and stuff. Left it for now
-    let foodNum: int = rand(2) + 1
+    let foodNum: int = rand(10) + 1
     var foodAdded: int = 0
 
     while foodAdded < foodNum:
@@ -24,3 +24,28 @@ proc generateFood*(field: var Field) =
             inc(foodAdded)
 
 
+# & Probably a proc for all animal decision making. Currently just goes one step a call towards the closest food or just wandering
+proc animalMakeDecision*(animal: var Animal, field: var Field) = 
+    
+    # ! Later make it a meaningful number
+    if animal.species.genome.energy < 1:
+        animal.animalRest()
+        return
+
+    randomize()
+
+    if animal.food_eaten < animal.food_needed:
+        let (foundFood, closestFood) = findClosestFood(animal, field)
+
+        # ^ Step or wander. If new decision making is added, first decide if its worth moving at all
+        if foundFood:
+            stepTowards(animal, field, closestFood)
+        else:
+            let directionX: uint = uint(rand(1)) + 1
+            let directionY: uint = uint(rand(1)) + 1
+            
+            let target: (uint, uint) = (directionX, directionY)
+
+            stepTowards(animal, field, target)
+    else:
+        animal.animalRest()

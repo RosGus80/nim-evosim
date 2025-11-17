@@ -1,5 +1,5 @@
 import types
-import std/random
+import std/random, std/sequtils, std/deques
 
 
 proc distance*(a: (uint,uint), b: (uint,uint)): int =
@@ -11,7 +11,68 @@ proc clampCoord(x, max: uint): uint =
 
 
 # & Function to find next closest step to target considering that some cells are is_occpuied. 
-# proc djikstraNextStep(animal: Animal, target: (uint, uint), field: Field): (uint, uint) = 
+proc dijkstraNextStep*(animal: Animal, field: Field, target: (uint, uint)): (bool, (uint,uint)) =   
+    # TODO: Will add meaningful weighing so that if there are (detected) carnivors in sight, 
+    # TODO: adjacent tiles become more costly, etc.
+    let size = int(field.size)
+
+    let startX = int(animal.pos.pos[0])
+    let startY = int(animal.pos.pos[1])
+    let goalX  = int(target[0])
+    let goalY  = int(target[1])
+
+    const directions = [
+        (0'i32, 1'i32),
+        (1'i32, 0'i32),
+        (0'i32, -1'i32),
+        (-1'i32, 0'i32)
+    ]
+
+    var dist = newSeqWith(size, newSeqWith(size, 999999))
+    dist[startX][startY] = 0
+
+    var parent = newSeqWith(size, newSeqWith(size, (-1, -1)))
+
+    var dq = initDeque[(int, int)]()
+    dq.addLast((startX, startY))
+
+    while dq.len > 0:
+        let (x, y) = dq.popFirst()
+
+        if x == goalX and y == goalY:
+            break
+
+        for d in directions:
+            let nx = x + d[0]
+            let ny = y + d[1]
+
+            if nx < 0 or ny < 0 or nx >= size or ny >= size:
+                continue
+
+            if field.cells[nx][ny].is_occupied and not (nx == goalX and ny == goalY):
+                continue
+
+            let newCost = dist[x][y] + 1
+            if newCost < dist[nx][ny]:
+                dist[nx][ny] = newCost
+                parent[nx][ny] = (x, y)
+                dq.addLast((nx, ny))
+
+    if dist[goalX][goalY] == 999999:
+        return (false, (0,0))
+
+    var cx = goalX
+    var cy = goalY
+
+    while parent[cx][cy] != (startX, startY):
+        let p = parent[cx][cy]
+        cx = p[0]
+        cy = p[1]
+
+        if cx == -1:
+            return (false, (0,0))
+
+    return (true, (uint(cx), uint(cy)))
 
 
 proc animalRest*(animal: var Animal) =
@@ -83,3 +144,9 @@ proc eatFood*(field: var Field) =
 
                 # echo "Food eaten! " &  repr(field.cells[i][j].has_food) & " " &  $i & " " & $j
 
+
+proc shuffleAnimals*(animals: var seq[Animal]) =
+    var r = initRand(67)
+
+    r.shuffle(animals)
+    

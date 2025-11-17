@@ -12,7 +12,7 @@ proc generateFood*(field: var Field) =
     randomize()
 
     # ! Later computate it based on animal amount and weather and stuff. Left it for now
-    let foodNum: int = rand(10) + 1
+    let foodNum: int = rand(9) + 1 # ^ Mapping to 1..10 instead of 0..9
     var foodAdded: int = 0
 
     while foodAdded < foodNum:
@@ -39,7 +39,14 @@ proc animalMakeDecision*(animal: var Animal, field: var Field) =
 
         # ^ Step or wander. If new decision making is added, first decide if its worth moving at all
         if foundFood:
-            stepTowards(animal, field, closestFood)
+            let (ok, nextPos) = dijkstraNextStep(animal, field, closestFood)
+
+            if ok:
+                stepTowards(animal, field, nextPos)
+            else:
+                let tx = uint(rand(int(field.size - 1)))
+                let ty = uint(rand(int(field.size - 1)))
+                stepTowards(animal, field, (tx, ty))
         else:
             let directionX: uint = uint(rand(1)) + 1
             let directionY: uint = uint(rand(1)) + 1
